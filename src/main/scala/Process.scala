@@ -16,9 +16,20 @@ object Process {
 
   def getErrors404PerDay(inDF: DataFrame)(implicit spark: SparkSession): Map[Int,Int] = {
     import spark.implicits._
-    inDF.groupBy($"Day").count().as("Count").rdd.map(r => r(0).asInstanceOf[Int] -> r(1).asInstanceOf[Int]).collect().toMap
+    inDF.groupBy($"Day").count().as("Count").
+      rdd.map(r => r(0).asInstanceOf[Int] -> r(1).asInstanceOf[Int]).collect().toMap
   }
 
-  def getTotalReturnedBytes(inDF: DataFrame)(implicit spark: SparkSession): Int = inDF.selectExpr("SUM (Bytes)").take(1).map(_.getAs[Int]).head
+  def getTotalReturnedBytes(inDF: DataFrame)(implicit spark: SparkSession): Int = inDF.
+    selectExpr("SUM (Bytes)").rdd.map(r => r(0).asInstanceOf[Int]).collect().head
 
+  def processAll(inDF: DataFrame)(implicit spark: SparkSession): Result = {
+    val r1 = getNumberOfUniqueHosts(inDF)
+    val r2 = getNumbersOfError404(inDF)
+    val r3 = getTop5URLforError404(inDF)
+    val r4 = getErrors404PerDay(inDF)
+    val r5 = getTotalReturnedBytes(inDF)
+
+    Result(r1, r2, r3, r4, r5)
+  }
 }

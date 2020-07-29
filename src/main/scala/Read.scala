@@ -6,15 +6,15 @@ case object Read {
     import spark.implicits._
 
     val sc = spark.sparkContext
-    sc.textFile(textfile).map(line => {
+    val data = sc.textFile(textfile).map(line => {
       val values = pattern.findAllIn(line)
       val day: Int = values.group(2).toInt
       val caller:String = values.group(1)
       val request: String = values.group(6)
       val code: Int = values.group(7).toInt
       val bytes: Int = values.group(8).toInt
-      Seq(caller, day, request, code, bytes)
-    }).
-    toDF("Caller", "Day", "Request", "Code", "Bytes_sent" )
+      (caller, day, request, code, bytes)
+    }).toDF("Caller", "Day", "Request", "Code", "Bytes_sent" )
+    data
   }
 }

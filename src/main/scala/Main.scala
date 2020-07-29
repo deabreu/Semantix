@@ -1,15 +1,25 @@
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.{SparkConf, SparkContext}
 
 object Main extends App {
-  val conf = new SparkConf().setAppName("Semantix Challenge")
-  val sc = new SparkContext(conf)
+  implicit val session = SparkSession
+    .builder()
+    .appName("Semantix Challenge")
+    .config("spark.master", "local")
+    .getOrCreate
 
-  implicit val session = SparkSession.builder.config(conf).getOrCreate
+  val baseDir = args(0)
 
-  val dfJun = Read.getDF(args(0))
+  val processList = if (baseDir.isEmpty || baseDir.isBlank)
+    Array.empty
+  else {
+      val junFile = "/source/NASA_access_log_Jul95"
+      val augFile = "/source/NASA_access_log_Aug95"
+      Array(junFile, augFile).map(baseDir+_)
+  }
 
-  val dfAug = Read.getDF(args(1))
-
-
+  for (process <- processList) {
+    val localDF = Read.getDF(process)
+    val localResult = Process.processAll(localDF)
+    DisplayResults.onScreen(localResult)
+  }
 }
